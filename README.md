@@ -1,6 +1,6 @@
 # Meshblocks
 
-**Bring MeshCore messaging to your ESPHome devices.**
+**MeshCore building blocks for ESPHome.**
 
 Turn a button press into a LoRa message, build a channel bot, or host several
 independent room servers on one radio. Meshblocks connects ESPHome automations
