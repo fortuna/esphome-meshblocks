@@ -77,6 +77,9 @@ with tempfile.TemporaryDirectory(prefix="meshcore-examples-") as directory:
     readme_configs = re.findall(r"```yaml\n(.*?)```", (root / "README.md").read_text(), re.DOTALL)
     configs.append(("readme-beacon", readme_configs[0]))
     if args.published:
+        configs[0:0] = [(f"package-{name}", "packages:\n  demo: "
+                        f"github://fortuna/esphome-meshblocks/examples/{name}.yaml@review/initial-import\n")
+                       for name in ("heltec-v3-three-rooms", "heltec-v3-ping-bot")]
         configs.append(("readme-clients-package", readme_configs[1]))
     for name, text in configs:
         if not args.published:
