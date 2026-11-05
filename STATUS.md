@@ -4,6 +4,19 @@ Updated **2026-11-05**. ESPHome is the selected implementation approach.
 [Design](docs/design.md) defines supported boundaries;
 [manual](docs/esphome-manual.md) defines consumer configuration/actions.
 
+## Hosted review branch and clone-free setup — 2026-11-05
+
+The standalone repository is hosted privately at `fortuna/esphome-meshblocks`,
+with draft PR #1 from `review/initial-import` to an empty `main` baseline.
+The examples, manual and README import that review branch through ESPHome Git
+sources; no library clone is required. The README calls out implemented features
+and includes a complete PRG-to-channel beacon. Private Git access, mutable-branch
+refresh and optional immutable pinning are documented. No release is claimed.
+
+The external prototype now consumes the hosted branch and compiles successfully
+without a sibling component path. README/example and hosted-package validation
+are tracked in LOG. No flash or new RF observation is part of this change.
+
 ## Upstream SX126x PR source — 2026-11-05
 
 The three examples, radio fixture, isolated consumer and usage snippets now use
@@ -106,7 +119,7 @@ They are not dependencies of this repository. Three basic flashable examples rem
 public: a static three-room server, a channel bot using `sender_name` without a
 client, and two clients exchanging a PRG-triggered local ping/pong. The latter
 needs no secrets file: public demo keys start with `a11ce` (Alice) and `b0b` (Bob). Their actual YAML is covered by schema/build checks; they do not
-import prototype adapters. The old root proposal manifests remain deleted. No hosted package/repository release is claimed.
+import prototype adapters. The old root proposal manifests remain deleted. The hosted review branch is available; no release is claimed.
 
 UI page state and USB command parsing no longer live in MeshCoreComponent.
 Consumers use bounded resource observations and typed legacy management operations.
@@ -146,7 +159,8 @@ prototype; new client identities still need stock-peer RF acceptance.
 
 ## Remaining work
 
-- Publish a reviewed repository/revision and verify its actual hosted URLs.
+- Complete review and publish a stable revision; verify anonymous access if the
+  currently private repository is made public.
 - Complete physical OLED/PRG and fresh stock-peer checks for the flashed external
   application; USB identity/history/readiness and sleep checks passed.
 - Verify physical PRG/event logs and remote client send/receive/receipts on actual peers and shared load.

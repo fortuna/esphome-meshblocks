@@ -4,7 +4,7 @@ These are complete, headless ESPHome applications using only this project's
 components and standard ESPHome features. They do not import the external
 prototype, UI, USB console, manual clock or power experiments. Board definitions
 come directly from ESPHomeCollection at the revision pinned in each example.
-Each example also selects the pinned SX126x external component directly.
+Each example selects the SX126x PR source and Meshblocks review branch directly.
 
 | Example | Behavior |
 | --- | --- |
@@ -14,18 +14,41 @@ Each example also selects the pinned SX126x external component directly.
 
 ## Configure and build
 
-Use the [pinned ESPHome toolchain](../docs/esphome-manual.md#toolchain). From the
-library root, copy the desired example into `local/` (a sibling of `examples/`,
-so its relative component paths remain correct):
+Use the [pinned ESPHome toolchain](../docs/esphome-manual.md#toolchain) from your
+own application directory. ESPHome fetches packages and components automatically;
+no Meshblocks clone is needed. Save these small entry points for the examples you
+want to try:
+
+```yaml
+# rooms.yaml
+packages:
+  demo: github://fortuna/esphome-meshblocks/examples/heltec-v3-three-rooms.yaml@review/initial-import
+```
+
+```yaml
+# bot.yaml
+packages:
+  demo: github://fortuna/esphome-meshblocks/examples/heltec-v3-ping-bot.yaml@review/initial-import
+```
+
+```yaml
+# clients.yaml — works without secrets.yaml
+packages:
+  demo: github://fortuna/esphome-meshblocks/examples/heltec-v3-two-clients.yaml@review/initial-import
+```
+
+The repository is private during review. Configure Git access on the build machine
+as described in [the manual](../docs/esphome-manual.md#git-dependencies). The branch
+is mutable; use a reviewed commit SHA in both package and component sources for a
+reproducible deployment.
+
+For rooms, download [generate_secrets.py](generate_secrets.py) into your application
+directory, then generate new private inputs **only for a new device**:
 
 ```sh
-mkdir -p local
-cp examples/heltec-v3-three-rooms.yaml local/rooms.yaml
-cp examples/heltec-v3-ping-bot.yaml local/bot.yaml
-cp examples/heltec-v3-two-clients.yaml local/clients.yaml
-python examples/generate_secrets.py local/secrets.yaml
-esphome config local/rooms.yaml
-esphome compile local/rooms.yaml
+python generate_secrets.py secrets.yaml
+esphome config rooms.yaml
+esphome compile rooms.yaml
 ```
 
 The helper requires Python's `cryptography` package. It creates three independent
@@ -46,8 +69,8 @@ These are public demo credentials shared by everyone; use unique `!secret` keys
 for a real deployment.
 
 ```sh
-esphome compile local/bot.yaml
-esphome compile local/clients.yaml
+esphome compile bot.yaml
+esphome compile clients.yaml
 ```
 
 After reviewing board, RF profile and existing-device state, use ESPHome's normal
@@ -70,7 +93,7 @@ The radio derives `preamble_size` using
 `${32 if (meshcore_sf | int) <= 8 else 16}`: 32 symbols through SF8 and 16 above it.
 Frequency includes its unit; bandwidth and coding rate use SX126x's enum spellings.
 Channel/advertisement scopes remain separate network choices. To override from the
-command line, for example: `esphome -s meshcore_sf 9 config local/clients.yaml`.
+command line, for example: `esphome -s meshcore_sf 9 config clients.yaml`.
 
 Building the examples does not upload them. None of these examples needs Wi-Fi or HA.
 
@@ -101,12 +124,10 @@ No client identity is required; the label is unverified channel text.
 
 ## Try the two clients
 
-For a quick start, only copy and build the self-contained client example:
+Save the `clients.yaml` Git package entry point above, then run:
 
 ```sh
-mkdir -p local
-cp examples/heltec-v3-two-clients.yaml local/clients.yaml
-esphome compile local/clients.yaml
+esphome compile clients.yaml
 ```
 
 Flash `clients.yaml` and watch the UART logs at 115200 baud. Startup identifies the

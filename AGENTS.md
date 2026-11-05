@@ -41,7 +41,10 @@ application behavior. Declare list components with stable IDs and use !extend.
 Do not hide a checkout-relative external_components source in a shared package:
 that path is relative to the consumer's top-level YAML. Git users select their
 board, driver and component sources independently; the examples follow the open
-SX126x PR as described below. Publication remains a separate action.
+SX126x PR as described below. Consumer docs and examples use the hosted
+`github://fortuna/esphome-meshblocks@review/initial-import` source by default,
+with no explicit clone step. The review repository is private and the branch is
+mutable; keep access/refresh behavior and optional immutable pins explicit.
 
 Use the pinned ESPHome 2026.11.0-dev core at
 940f87056d692a6ee87c2aa3d526087842e20ee0 and independent SX126x source

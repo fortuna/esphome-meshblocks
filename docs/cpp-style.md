@@ -168,7 +168,7 @@ job runs the default style check, checker regressions and sanitizer host suites.
 It uses check mode, so violations fail the job rather than editing submitted
 sources. Full firmware adapter analysis is currently a local check.
 
-To make that CI result a merge requirement when the repository is published:
+To make that CI result a merge requirement:
 
 1. Include the workflow and style configuration in the repository and let the
    workflow run once so its check is available for selection.
@@ -177,7 +177,8 @@ To make that CI result a merge requirement when the repository is published:
 3. Keep platform-profile evidence and manual style review in the pull request
    when the default host profile does not cover the changed code.
 
-No hosted run or required branch-protection rule has been established here.
+Hosted push and draft-PR runs have passed. A required branch-protection rule
+has not been established here.
 This tooling does not install a local Git hook; contributors run the local
 commands explicitly. Keep LLVM upgrades deliberate: update the expected version in
 `scripts/cpp_style.py`, validate formatting/fixes and the checker regressions,

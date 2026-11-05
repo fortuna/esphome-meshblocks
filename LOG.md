@@ -6,6 +6,23 @@ history was preserved in the workspace's external prototype under
 tracks the self-contained reusable project. No historical device observation is
 being claimed for a new build.
 
+## 2026-11-05 — Hosted review branch and clone-free consumers
+
+Created `fortuna/esphome-meshblocks` privately with an empty `main` baseline and
+initial standalone snapshot on `review/initial-import`, under draft PR #1.
+The three example files now fetch Meshblocks from that branch. README feature
+callouts and a complete button-to-channel beacon replace the sibling-checkout
+setup; the manual and examples guide show direct sources and package imports.
+Git access, branch refresh and optional immutable pins are explicit.
+
+The example checker validates the README YAML alongside maintained examples and
+supports `--published` for actual hosted sources/package imports. Default local
+checks still exercise the worktree. The external prototype's source now uses Git;
+its developer checks resolve ESPHome's cache rather than a sibling directory.
+The actual prototype compiles with downloaded components. Final example and
+hosted-source validation results follow after the branch update. No flash,
+credential/storage-ID change, or new RF evidence.
+
 ## Project renamed Meshblocks — 2026-11-05
 
 The project is now Meshblocks ("MeshCore-compatible building blocks for ESPHome"),

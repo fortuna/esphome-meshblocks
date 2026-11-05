@@ -1,4 +1,4 @@
-"""Validate public examples with generated private inputs; optionally compile all three.
+"""Validate public examples and README configurations; optionally compile them.
 
 Uses a temporary consumer directory, never deployment secrets or a serial device.
 """
@@ -8,6 +8,7 @@ import ctypes
 import importlib.util
 import os
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 from unittest.mock import patch
@@ -21,6 +22,7 @@ generator = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(generator)
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--compile", action="store_true")
+parser.add_argument("--published", action="store_true", help="Use the hosted review branch instead of local components")
 args = parser.parse_args()
 
 with patch.object(generator.secrets, "token_bytes", return_value=bytes([1]) * 32):
@@ -70,10 +72,17 @@ with tempfile.TemporaryDirectory(prefix="meshcore-examples-") as directory:
         native = bytes.fromhex(key)
         assert len(native) == 64 and native[0] & 7 == 0 and native[31] & 0xc0 == 0x40
     secrets_file.write_text(yaml.safe_dump(values))
-    for name in ("heltec-v3-three-rooms", "heltec-v3-ping-bot", "heltec-v3-two-clients"):
-        text = (root / f"examples/{name}.yaml").read_text()
-        # Execute the published files from outside the repository with explicit source paths.
-        text = text.replace("path: ../components", f"path: {root / 'components'}")
+    configs = [(name, (root / f"examples/{name}.yaml").read_text()) for name in
+               ("heltec-v3-three-rooms", "heltec-v3-ping-bot", "heltec-v3-two-clients")]
+    readme_configs = re.findall(r"```yaml\n(.*?)```", (root / "README.md").read_text(), re.DOTALL)
+    configs.append(("readme-beacon", readme_configs[0]))
+    if args.published:
+        configs.append(("readme-clients-package", readme_configs[1]))
+    for name, text in configs:
+        if not args.published:
+            # Exercise uncommitted components while keeping distributed examples Git-based.
+            text = text.replace("source: github://fortuna/esphome-meshblocks@review/initial-import",
+                                f"source:\n      type: local\n      path: {root / 'components'}")
         config = consumer / f"{name}.yaml"
         config.write_text(text)
         if name == "heltec-v3-two-clients":

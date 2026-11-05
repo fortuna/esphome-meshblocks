@@ -327,7 +327,9 @@ for example in sorted((root / "examples").glob("heltec-v3-*.yaml")):
 
 
 def fixture_content(text):
-    return text.replace("path: ../../components", "path: ../components").replace("path: ../components", f"path: {root / 'components'}")
+    return text.replace("path: ../../components", "path: ../components").replace("path: ../components", f"path: {root / 'components'}").replace(
+        "source: github://fortuna/esphome-meshblocks@review/initial-import",
+        f"source:\n      type: local\n      path: {root / 'components'}")
 
 
 def find_actions(value, name):

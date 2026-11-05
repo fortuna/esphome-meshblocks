@@ -1,76 +1,147 @@
 # Meshblocks
 
-MeshCore-compatible building blocks for ESPHome. Compose room servers, channels
-and client identities into your own firmware, in YAML, alongside any other
-ESPHome component. However many blocks a node has, it owns one radio and one
-shared bounded transmit queue.
+**Bring MeshCore messaging to your ESPHome devices.**
 
-The project is named Meshblocks, but its YAML still uses MeshCore names: the
-configuration key is `meshcore:` and the [external components](components/) are
-`meshcore`, `meshcore_core` and `meshcore_ed25519`.
+Turn a button press into a LoRa message, build a channel bot, or host several
+independent room servers on one radio. Meshblocks connects ESPHome automations
+to MeshCore-compatible rooms, channels and clients through YAML.
 
-This project supplies the protocol/services and ESPHome adapters. Your application
-supplies the board, radio profile, clock and automations. Three basic flashable
-examples illustrate those choices; device-specific UI, USB management and power
-experiments remain external.
+## Features
 
-## Flashable examples
+- **Independent room servers.** Give each room its own identity, private/public
+  access policy, member sessions and signed advertisements.
+- **History that survives a reboot.** Room identities and message history persist
+  on the device; stable storage IDs preserve them across ordinary firmware updates.
+- **Channel automations.** React to incoming messages and send templated replies
+  on shared-key channels. Send-only actions don't need a receive subscription.
+- **Encrypted client messages.** Send private messages, receive from configured
+  peers, advertise CHAT identities and observe TX, receipts and timeouts. Clients
+  on the same device can exchange messages through the local queue without RF.
+- **One radio, several services.** Rooms, channels and clients share one bounded
+  scheduler and transmit queue, with full-identity ownership and collision checks.
+- **ESPHome all the way through.** Compose typed actions with buttons, sensors and
+  automations. Fetch components directly from Git; normal mesh operation needs no
+  Wi-Fi, Home Assistant, phone or deployment controller.
 
-- [Three-room server](examples/heltec-v3-three-rooms.yaml): independent static room
-  identities, private/public access and scheduled advertisements.
-- [Channel bot](examples/heltec-v3-ping-bot.yaml): channel pongs using `sender_name`.
-- [Two clients](examples/heltec-v3-two-clients.yaml): PRG-triggered Alice/Bob ping/pong
-  on one device, embedded vanity demo keys, signed client adverts and event logs.
+## Try it: a button that talks over the mesh
 
-All are complete Heltec V3 YAML configurations with no prototype dependency.
-[Setup, private key generation, building and usage](examples/README.md).
+Save this as `beacon.yaml`. On a **Heltec WiFi LoRa 32 V3**, pressing PRG sends
+`Checking in from the trail!` to `#testing`. ESPHome fetches the board, radio driver
+and Meshblocks automatically. No library clone or identity-key generation is
+needed for this channel example.
 
-## Use from another directory
-
-With this checkout beside your application:
+The RF values below are an explicit **NYC / MeshNY example**. Match frequency,
+modulation, power and scope to your network and hardware before transmitting.
 
 ```yaml
-# my-node/node.yaml
+esphome:
+  name: trail-beacon
+  min_version: 2026.11.0-dev
+
 packages:
   board: github://fortuna/ESPHomeCollection/boards/heltec-wifi-lora-32-v3/board.yaml@71d63352dcb09a396d1cbfe2dc28c3210d8d436e
+
 external_components:
   - source: github://pr#22197
     components: [sx126x]
-  - source:
-      type: local
-      path: ../esphome-meshblocks/components
+  - source: github://fortuna/esphome-meshblocks@review/initial-import
     components: [meshcore, meshcore_core, meshcore_ed25519]
+
+logger:
+  baud_rate: 115200
+  hardware_uart: UART0
+
+# Starts unset; Meshblocks supplies within-boot ordering estimates.
+# Use an independent RTC/SNTP source when you need accurate UTC.
+time:
+  - platform: template
+    id: mesh_time
+    timezone: UTC0
+    lambda: return {};
+
+sx126x:
+  - id: !extend lora_radio
+    modulation: LORA
+    crc_enable: true
+    payload_length: 0
+    sync_value: [0x14, 0x24]
+    rx_start: true
+    frequency: 910.525MHz
+    bandwidth: 62_5kHz
+    spreading_factor: 7
+    coding_rate: CR_4_5
+    preamble_size: 32
+    pa_power: 22
+
+meshcore:
+  id: mesh_node
+  radio_id: lora_radio
+  time_id: mesh_time
+  path_hash_size: 2
+  channels:
+    - id: testing
+      key: "#testing"
+      scope: nyc
+
+binary_sensor:
+  - id: !extend boot_button
+    on_press:
+      - meshcore.send_channel_message:
+          channel_id: testing
+          sender_name: Trail Beacon
+          message: Checking in from the trail!
+          timestamp: !lambda return id(mesh_node).next_channel_timestamp();
 ```
 
-The SX126x source follows [open ESPHome PR #22197](https://github.com/esphome/esphome/pull/22197)
-with the default one-day cache refresh. Its head checked on 2026-11-05 is
-`75a730821a9c5ea0efc3c5a8828e4687684d1311`; future PR updates need revalidation.
+Use the [validated ESPHome toolchain](docs/esphome-manual.md#toolchain), then run:
 
-Add an explicit RF profile, ESPHome time source and `meshcore:` services as shown
-in the [manual](docs/esphome-manual.md). Component paths resolve from your top-level
-YAML; package `!include` paths resolve from their containing file. Importing a
-package alone does not load this project's external components. Both relocated
-local and pinned Git consumption are checked by [the consumer test](tests/test_external_consumer.py).
-The repository is not published yet; no hosted URL or release is promised.
+```sh
+esphome config beacon.yaml
+esphome compile beacon.yaml
+```
 
-## Supported scope
+Upload with ESPHome for your device, then watch `#testing` on a peer with matching
+RF settings and channel key. Channel sender names are unverified labels. The
+beacon needs Internet access for build-time downloads, then runs independently.
 
-- Independent rooms with private/public access, durable identity/history and
-  signed advertisements. Configure native keys/passwords with `!secret`.
-- Shared-key channels with receive events and `meshcore.send_channel_message`.
-- Static client identities with `meshcore.send_client_message` and
-  `meshcore.advertise_client`, local delivery and `on_message` for local/configured
-  remote peers. Room membership is deferred; RF/app acceptance is pending.
-- Typed `room_id`, `channel_id`, `client_id` advertisement references and
-  `sender_private_key`/`recipient_public_key` client-message arguments; channel sends use `sender_name`.
+> **Review branch:** imports use `review/initial-import`, which can change and
+> uses ESPHome's default one-day refresh. The repository is private during review;
+> your build environment needs GitHub access. See [Git access and revision pinning](docs/esphome-manual.md#git-dependencies).
+> The SX126x driver follows [ESPHome PR #22197](https://github.com/esphome/esphome/pull/22197).
 
-Current adapters require ESP32, ESP-IDF and SX126x. The Heltec V3 has earlier
-room/channel hardware evidence; builds alone do not qualify other boards.
-Repeating and companion firmware are not implemented. Normal operation does not
-require Wi-Fi, Home Assistant, a phone, USB or an Internet connection.
+## More starting points
 
-Private keys/passwords are embedded in firmware when supplied statically. Preserve
-room `storage_id` and credentials on updates. See the manual for formats and limits.
+| Example | What it does |
+| --- | --- |
+| [Three-room server](examples/heltec-v3-three-rooms.yaml) | Family and Building private rooms plus an open Public room, each with its own identity, retained history and signed advertisements |
+| [Channel bot](examples/heltec-v3-ping-bot.yaml) | Answers `esphome-ping` on testing/private channels with a scoped reply |
+| [Two clients](examples/heltec-v3-two-clients.yaml) | Alice sends Bob an encrypted ping on PRG; Bob replies through the local queue, with public demo keys and event logs |
+
+Import these configurations directly as Git packages. For example, save this as
+`clients.yaml` and compile it; no secrets file is needed:
+
+```yaml
+packages:
+  demo: github://fortuna/esphome-meshblocks/examples/heltec-v3-two-clients.yaml@review/initial-import
+```
+
+[The examples guide](examples/README.md) covers RF overrides, private room inputs,
+and expected radio/log behavior. Replace public demo credentials with unique
+`!secret` values for real client deployments.
+
+## Current scope
+
+Meshblocks uses `meshcore:` in YAML and supplies the `meshcore`, `meshcore_core`
+and `meshcore_ed25519` external components. Your application selects the board,
+radio profile, time source and behavior. Current adapters require ESP32, ESP-IDF
+and SX126x; Heltec V3 has earlier room/channel hardware evidence.
+
+**Still ahead:** repeater and companion firmware, client room membership, automatic
+contact discovery, and stock-peer RF acceptance for client messaging. Builds and
+host tests establish different evidence from physical radio exchanges.
+
+Private static credentials are embedded in firmware. Keep secrets/build artifacts
+private and preserve room credentials, `storage_id` and NVS on updates.
 
 [Manual](docs/esphome-manual.md) · [Design](docs/design.md) ·
 [Contributing](CONTRIBUTING.md) · [Status](STATUS.md) · [History](LOG.md)

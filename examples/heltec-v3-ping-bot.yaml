@@ -35,9 +35,7 @@ logger:
 external_components:
   - source: github://pr#22197
     components: [sx126x]
-  - source:
-      type: local
-      path: ../components
+  - source: github://fortuna/esphome-meshblocks@review/initial-import
     components: [meshcore, meshcore_core, meshcore_ed25519]
 
 sx126x:

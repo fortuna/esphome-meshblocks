@@ -7,12 +7,12 @@ radio profile, clock source, automations and optional management/UI adapters.
 
 The validated core is ESPHome **2026.11.0-dev** at
 `940f87056d692a6ee87c2aa3d526087842e20ee0`, using Python 3.13 and ESP-IDF.
-From the library checkout:
+From your application directory (no library checkout required):
 
 ```sh
-python3.13 -m venv local/venvs/esphome-dev
-local/venvs/esphome-dev/bin/python -m pip install "esphome @ git+https://github.com/esphome/esphome.git@940f87056d692a6ee87c2aa3d526087842e20ee0"
-source local/venvs/esphome-dev/bin/activate
+python3.13 -m venv .venv
+.venv/bin/python -m pip install "esphome @ git+https://github.com/esphome/esphome.git@940f87056d692a6ee87c2aa3d526087842e20ee0"
+source .venv/bin/activate
 python -m esphome version
 ```
 
@@ -37,11 +37,9 @@ clock starts unset and can be replaced with your own independent time source.
 ## External application layout
 
 ```text
-workspace/
-  esphome-meshblocks/     # this checkout
-  my-node/
-    node.yaml
-    secrets.yaml         # private; do not commit
+my-node/
+  node.yaml
+  secrets.yaml           # private; do not commit
 ```
 
 This is a complete headless channel configuration for a Heltec V3. The RF values
@@ -60,9 +58,7 @@ packages:
 external_components:
   - source: github://pr#22197
     components: [sx126x]
-  - source:
-      type: local
-      path: ../esphome-meshblocks/components
+  - source: github://fortuna/esphome-meshblocks@review/initial-import
     components: [meshcore, meshcore_core, meshcore_ed25519]
 logger:
 time:
@@ -109,26 +105,37 @@ Use a pinned upstream board package or declare your wiring in the application.
 
 ## Git dependencies
 
-When a repository URL is available, declare MeshCore as an external component source at an immutable
-commit, independently of the board and radio driver. The following is a template; substitute your repository URL and revision.
-This project has not been published to a hosted repository yet.
+Meshblocks is hosted at [fortuna/esphome-meshblocks](https://github.com/fortuna/esphome-meshblocks).
+Use the `review/initial-import` branch while the initial draft PR is under review:
 
 ```yaml
-packages:
-  board: github://fortuna/ESPHomeCollection/boards/heltec-wifi-lora-32-v3/board.yaml@71d63352dcb09a396d1cbfe2dc28c3210d8d436e
 external_components:
-  - source: github://pr#22197
-    components: [sx126x]
-  - source:
-      type: git
-      url: ${meshcore_repository}
-      ref: ${meshcore_revision}
-    refresh: never
+  - source: github://fortuna/esphome-meshblocks@review/initial-import
     components: [meshcore, meshcore_core, meshcore_ed25519]
 ```
 
-The isolated consumer test validates this layout against a temporary Git repository
-and compiles it without application files. The direct board and SX126x driver dependencies retain their own pins. A hosted publication still needs its actual URL/ref.
+ESPHome downloads and caches the source automatically. Board and SX126x driver
+sources remain independent. The review branch is mutable and follows ESPHome's
+default one-day refresh; set `refresh: always` on the source to check for updates
+on every validation/build. For reproducible deployments, replace the branch name
+with a reviewed full commit SHA and set `refresh: never`.
+
+The repository is currently private. The build machine needs a Git credential
+helper with access to it; an authenticated GitHub CLI can configure one with
+`gh auth setup-git`. Do not put tokens in YAML or source URLs. Once the repository
+is public, anonymous downloads use the same source declaration.
+
+You can also import a complete example as a package, with no local library files:
+
+```yaml
+packages:
+  demo: github://fortuna/esphome-meshblocks/examples/heltec-v3-two-clients.yaml@review/initial-import
+```
+
+Example packages declare their own external components. Keep package and component
+refs aligned when pinning an example. The isolated consumer test separately checks
+relocated local sources and a temporary immutable Git dependency; hosted example
+and prototype checks verify the real review branch.
 
 ## Static YAML rooms
 

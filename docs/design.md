@@ -1,6 +1,6 @@
 # Design: reusable MeshCore services on ESPHome
 
-Updated 2026-11-04. This is the implemented contract, not a proposed device
+Updated 2026-11-05. This is the implemented contract, not a proposed device
 application. Configuration/actions are documented in the [manual](esphome-manual.md).
 
 ## Distribution and dependency direction
@@ -25,7 +25,11 @@ follow the open SX126x PR through `github://pr#22197` with the default daily cac
 refresh; the core and board remain pinned. `tests/test_external_consumer.py` exercises a relocated checkout and a
 temporary pinned Git repository containing only components and notices, without
 library packages/scripts/tests. This verifies
-layout/loading, not hosted publication.
+layout/loading. The examples and external prototype now consume the hosted
+`fortuna/esphome-meshblocks` review branch (`review/initial-import`) directly.
+ESPHome fetches the source; users need no library checkout. This mutable branch
+is private during review and requires Git access; immutable reviewed SHAs remain
+the deployment pinning option.
 
 ## Ownership
 

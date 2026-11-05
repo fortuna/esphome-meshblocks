@@ -25,6 +25,7 @@ Run from this repository with the ESPHome environment activated:
 sh tests/run_host_tests.sh
 python tests/test_config.py
 python tests/test_examples.py --compile
+python tests/test_examples.py --published --compile
 python tests/test_external_consumer.py --compile
 python3 scripts/cpp_style.py
 python3 tests/test_cpp_style.py
@@ -35,7 +36,10 @@ The consumer test copies only components and third-party notices into a
 temporary dependency, validates local and Git sources, and optionally compiles
 the pinned Git version. It cannot access prototype components. It writes ignored
 logs under build/ and uses the normal dependency cache under local/.esphome.
-The temporary Git source is not a published release.
+The temporary Git source is not a published release. The default example check
+substitutes the worktree components; `--published` checks the real hosted branch
+and the README package import. It requires Git access while the repository is
+private. The README beacon is validated/built alongside the three example files.
 
 For changes involving room composition, also build the appropriate synthetic
 static-room fixture; for application changes, build the external application.
