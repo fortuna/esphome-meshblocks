@@ -168,9 +168,9 @@ private and preserve room credentials, `storage_id` and NVS on updates.
 
 ## About the author
 
-I'm [Vinicius (Vini) Fortuna](https://github.com/fortuna), co-creator of
-[Outline](https://getoutline.org/). I build software around small, focused
-components and clear interfaces so it can be reused, extended and scaled as needs
+I'm [Vinicius Fortuna](https://github.com/fortuna), co-creator of the 
+[Outline VPN](https://getoutline.org/) and [SDK](https://developer.getoutline.org/sdk/what-is-the-sdk).
+I build software around small, focused components and clear interfaces so it can be reused, extended and scaled as needs
 change. Meshblocks brings that approach to embedded mesh networking: compose the
 services you need, keep application behavior separate, and make resource limits
 explicit.
