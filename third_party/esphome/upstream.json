@@ -1,0 +1,12 @@
+{
+  "repository": "https://github.com/esphome/esphome",
+  "commit": "0b2b16e664ecfc0add37f3435db1c2140b8a687e",
+  "tag": "2026.9.1",
+  "files": {
+    "__init__.py": "120ba7921f3618ab599ae112ebdba94a5da1f049bc5d8bfe09c72d19aa7e483e",
+    "sx126x.cpp": "3950ab7cc6ee9d80ee6c1e8bff4633bb423b1ec3483db213487cc7d8956e3f0a",
+    "sx126x.h": "a9fc72680690a9b641233e7a2a4c894e051080e7afdc9b1f4ff2e235fadf7423",
+    "sx126x_reg.h": "8d55d71e7134e471f1d4db13687ae9ade2dd8feba80ad6de42a7295943cf04ec",
+    "automation.h": "5684055220aa5aa0488286037948f9a56a274d72066cc1fe1f9cf5906d8cd5d3"
+  }
+}

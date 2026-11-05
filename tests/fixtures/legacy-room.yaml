@@ -1,0 +1,36 @@
+# Schema/provisioning test input; not a public starter configuration.
+# First room slice. Password references are validated here; credentials are provisioned over USB.
+# Add building through heltec-v3-two-rooms.yaml. Stable ids preserve stored state.
+esphome:
+  name: meshcore-v3-personal
+  min_version: 2026.11.0-dev
+
+packages:
+  clock: !include time.yaml
+  board: github://fortuna/ESPHomeCollection/boards/heltec-wifi-lora-32-v3/board.yaml@71d63352dcb09a396d1cbfe2dc28c3210d8d436e
+  radio_profile: !include radio-profile.yaml
+
+esp32:
+  framework:
+    advanced:
+      loop_task_stack_size: 16384
+
+logger:
+  baud_rate: 115200
+  hardware_uart: UART0
+
+external_components:
+  - source:
+      type: local
+      path: ../../components
+    components: [meshcore, meshcore_core, meshcore_ed25519]
+
+meshcore:
+  id: mesh_node
+  radio_id: lora_radio
+  time_id: mesh_time
+  path_hash_size: 2
+  rooms:
+    - id: personal
+      name: personal
+      password: !secret personal_room_password

@@ -1,0 +1,112 @@
+# Three independent room servers, configured entirely at build time.
+
+substitutions:
+  # Default MeshCore US/Canada profile with NYC (MeshNY) network conventions.
+  # https://nyme.sh/getting-started/#meshcore
+  # For another network, set these parameters and outbound scopes together.
+  meshcore_frequency: 910.525MHz
+  meshcore_bandwidth: 62_5kHz
+  meshcore_sf: 7
+  meshcore_cr: CR_4_5
+  meshcore_pa_power: 22  # TX power in dBm for this Heltec V3/SX1262.
+
+esphome:
+  name: meshcore-v3-three-rooms
+  min_version: 2026.11.0-dev
+
+packages:
+  board: github://fortuna/ESPHomeCollection/boards/heltec-wifi-lora-32-v3/board.yaml@71d63352dcb09a396d1cbfe2dc28c3210d8d436e
+
+esp32:
+  framework:
+    advanced:
+      loop_task_stack_size: 16384
+
+# Standalone clock input starts unset. MeshCore uses build/restored ordering time.
+# Replace with an independent RTC/SNTP source for accurate UTC; no USB/HA dependency.
+time:
+  - platform: template
+    id: mesh_time
+    timezone: UTC0
+    lambda: return {};
+
+logger:
+  baud_rate: 115200
+  hardware_uart: UART0
+
+external_components:
+  - source: github://pr#22197
+    components: [sx126x]
+  - source:
+      type: local
+      path: ../components
+    components: [meshcore, meshcore_core, meshcore_ed25519]
+
+sx126x:
+  - id: !extend lora_radio
+    # MeshCore framing and continuous reception, shared across regions.
+    modulation: LORA
+    crc_enable: true
+    payload_length: 0  # Variable-length packets.
+    # SX126x register representation of MeshCore's private-network sync word.
+    sync_value: [0x14, 0x24]
+    rx_start: true
+    pa_power: ${meshcore_pa_power}
+    frequency: ${meshcore_frequency}
+    bandwidth: ${meshcore_bandwidth}
+    spreading_factor: ${meshcore_sf}
+    # MeshCore convention: 32 symbols for SF <= 8, 16 for higher SF.
+    preamble_size: ${32 if (meshcore_sf | int) <= 8 else 16}
+    coding_rate: ${meshcore_cr}
+
+meshcore:
+  id: mesh_node
+  radio_id: lora_radio
+  time_id: mesh_time
+  path_hash_size: 2  # MeshNY recommends two-byte path hashes.
+  rooms:
+    - id: family
+      name: Family
+      private_key: !secret family_room_private_key
+      password: !secret family_room_password
+    - id: building
+      name: Building
+      private_key: !secret building_room_private_key
+      password: !secret building_room_password
+    - id: public_room
+      storage_id: public
+      name: Public
+      private_key: !secret public_room_private_key
+      access: public
+
+# ESPHome owns timing. startup_delay is the minimum wait before an interval's first run.
+interval:
+  - id: family_nearby
+    interval: 240min
+    startup_delay: 2s
+    then:
+      - meshcore.advertise_room:
+          room_id: family
+          mode: direct
+  - id: building_nearby
+    interval: 240min
+    startup_delay: 4s
+    then:
+      - meshcore.advertise_room:
+          room_id: building
+          mode: direct
+  - id: public_nearby
+    interval: 240min
+    startup_delay: 6s
+    then:
+      - meshcore.advertise_room:
+          room_id: public_room
+          mode: direct
+  - id: public_flood
+    interval: 47h
+    startup_delay: 47h
+    then:
+      - meshcore.advertise_room:
+          room_id: public_room
+          mode: flood
+          scope: nyc

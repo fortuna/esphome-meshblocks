@@ -1,0 +1,15 @@
+.DS_Store
+.venv/
+__pycache__/
+*.py[cod]
+.esphome/
+.pio/
+build/
+local/
+backups/
+secrets.yaml
+secrets.*.yaml
+!secrets.example.yaml
+*.bin
+*.elf
+*.map

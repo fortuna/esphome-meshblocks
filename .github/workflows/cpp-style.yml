@@ -1,0 +1,25 @@
+name: C++ style and host tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  cpp-style:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install host tooling
+        run: brew install llvm@21 openssl@3
+      - name: Check formatter and semantic rules
+        run: python3 scripts/cpp_style.py
+      - name: Test the semantic checker
+        run: python3 tests/test_cpp_style.py
+      - name: Run sanitizer host suites
+        run: sh tests/run_host_tests.sh
