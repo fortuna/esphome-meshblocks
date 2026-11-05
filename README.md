@@ -19,9 +19,32 @@ to MeshCore-compatible rooms, channels and clients through YAML.
   on the same device can exchange messages through the local queue without RF.
 - **One radio, several services.** Rooms, channels and clients share one bounded
   scheduler and transmit queue, with full-identity ownership and collision checks.
-- **ESPHome all the way through.** Compose typed actions with buttons, sensors and
+- **Composable ESPHome building blocks.** Compose typed actions with buttons, sensors and
   automations. Fetch components directly from Git; normal mesh operation needs no
   Wi-Fi, Home Assistant, phone or deployment controller.
+
+## Composable by design
+
+A room server, a sensor beacon and a channel bot can live in the same ESPHome
+configuration. Start with one service, then add rooms, channels or client
+identities as your application grows.
+
+- **Connect behavior in YAML.** Wire buttons, sensors and timers to message sends;
+  use incoming messages to trigger scripts or update a display. Share configuration
+  through ESPHome packages and customize existing components with `!extend`.
+- **Keep control of your application.** Choose your board, radio profile and clock
+  independently. Add UI, integrations and application policies through actions,
+  events and narrow management APIs, without changing the protocol core.
+- **Extend at clear boundaries.** Portable C++ services are separate from ESPHome
+  and hardware adapters, with explicit dependencies for cryptography, storage and
+  packet transport. New platform integrations can build on those boundaries;
+  current hardware support is listed [below](#current-scope).
+- **Grow within explicit limits.** Service capacities and the shared transmit queue
+  are configured at build time. Adding services shares the device's memory and
+  airtime budget; higher capacity needs measurement on the target hardware.
+
+See the [design](docs/design.md) for ownership and extension boundaries, and the
+[manual](docs/esphome-manual.md) for configuration, events and actions.
 
 ## Try it: a button that talks over the mesh
 
@@ -142,6 +165,15 @@ host tests establish different evidence from physical radio exchanges.
 
 Private static credentials are embedded in firmware. Keep secrets/build artifacts
 private and preserve room credentials, `storage_id` and NVS on updates.
+
+## About the author
+
+I'm [Vinicius (Vini) Fortuna](https://github.com/fortuna), co-creator of
+[Outline](https://getoutline.org/). I build software around small, focused
+components and clear interfaces so it can be reused, extended and scaled as needs
+change. Meshblocks brings that approach to embedded mesh networking: compose the
+services you need, keep application behavior separate, and make resource limits
+explicit.
 
 [Manual](docs/esphome-manual.md) · [Design](docs/design.md) ·
 [Contributing](CONTRIBUTING.md) · [Status](STATUS.md) · [History](LOG.md)
