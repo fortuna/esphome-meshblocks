@@ -19,9 +19,19 @@ The example checker validates the README YAML alongside maintained examples and
 supports `--published` for actual hosted sources/package imports. Default local
 checks still exercise the worktree. The external prototype's source now uses Git;
 its developer checks resolve ESPHome's cache rather than a sibling directory.
-The actual prototype compiles with downloaded components. Final example and
-hosted-source validation results follow after the branch update. No flash,
-credential/storage-ID change, or new RF evidence.
+Validation: all schema/RF-profile cases pass. The three maintained examples and
+README beacon validate and compile. `python tests/test_examples.py --published`
+validates the actual hosted component source, all three remote package entry
+points and the README beacon from a temporary application directory, with no
+local component substitution. Demo key agreement, generation/file permissions,
+no-overwrite/symlink guards and secret redaction pass. Isolated local and pinned
+Git consumers also validate. The actual external prototype compiles with downloaded
+components; its host, 11 composition, provisioning and format checks pass.
+The beacon build uses 64,363 bytes linker RAM and 335,771 bytes flash. Hosted
+validation resolved commit `c6072ed03624b266e11ba05c78225373d1a8f628`; subsequent
+commits only extend package checks and record evidence, without component changes.
+Firmware builds required normal SDK-cache access outside the workspace sandbox.
+No flash, credential/storage-ID change, release or new RF evidence.
 
 ## Project renamed Meshblocks — 2026-11-05
 

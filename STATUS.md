@@ -14,8 +14,11 @@ and includes a complete PRG-to-channel beacon. Private Git access, mutable-branc
 refresh and optional immutable pinning are documented. No release is claimed.
 
 The external prototype now consumes the hosted branch and compiles successfully
-without a sibling component path. README/example and hosted-package validation
-are tracked in LOG. No flash or new RF observation is part of this change.
+without a sibling component path. All schema cases pass; the three maintained
+examples and README beacon validate and compile. All three hosted package imports
+and hosted components validate from an isolated application directory. Default
+local and immutable Git consumer checks pass. See LOG for commands/evidence.
+No flash or new RF observation is part of this change.
 
 ## Upstream SX126x PR source — 2026-11-05
 

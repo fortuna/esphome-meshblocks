@@ -38,7 +38,7 @@ the pinned Git version. It cannot access prototype components. It writes ignored
 logs under build/ and uses the normal dependency cache under local/.esphome.
 The temporary Git source is not a published release. The default example check
 substitutes the worktree components; `--published` checks the real hosted branch
-and the README package import. It requires Git access while the repository is
+and all three example package imports. It requires Git access while the repository is
 private. The README beacon is validated/built alongside the three example files.
 
 For changes involving room composition, also build the appropriate synthetic
