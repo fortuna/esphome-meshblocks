@@ -1,0 +1,118 @@
+# Two independent clients on one device. PRG sends Alice -> Bob; Bob replies to Alice.
+# The local queue exercises encrypted client messages without transmitting them on RF.
+# Public demo identities, shared by everyone running this example; not for private use.
+# No secrets.yaml is needed. Use your own keys with !secret for a real deployment.
+
+substitutions:
+  # Default MeshCore US/Canada profile with NYC (MeshNY) network conventions.
+  # https://nyme.sh/getting-started/#meshcore
+  # For another network, set these parameters and outbound scopes together.
+  meshcore_frequency: 910.525MHz
+  meshcore_bandwidth: 62_5kHz
+  meshcore_sf: 7
+  meshcore_cr: CR_4_5
+  meshcore_pa_power: 22  # TX power in dBm for this Heltec V3/SX1262.
+
+  alice_private_key: "403b138cfcc80c504c8f14fc400ab712f96857857d6042fadaa1b2d90a0913602f0551bc0b66752bd7b78c91e04884b8c19ac30211025f77e1c13e6c39adcce4"
+  alice_public_key: "a11ce8556a3d3efeebe636170d7a28c175d1aafad0a17f1b7f7dc7e67cb5d6ae"
+  bob_private_key: "2075046f024be19729f34e81b8ef37d40b4294f1eb1db4bb59ca9db0e171b9712f9fe79f386f9660b94f58a7012c84ee5e97883f238cb6cd0a4ca667572f581f"
+  bob_public_key: "b0b593ef3a305709b42a641647766be0f0fbac987e145fb6689469ceadfc46ad"
+
+esphome:
+  name: meshcore-v3-two-clients
+  min_version: 2026.11.0-dev
+
+packages:
+  board: github://fortuna/ESPHomeCollection/boards/heltec-wifi-lora-32-v3/board.yaml@71d63352dcb09a396d1cbfe2dc28c3210d8d436e
+
+# Standalone clock input starts unset. MeshCore uses build/restored ordering time.
+# Replace with an independent RTC/SNTP source for accurate UTC; no USB/HA dependency.
+time:
+  - platform: template
+    id: mesh_time
+    timezone: UTC0
+    lambda: return {};
+
+logger:
+  baud_rate: 115200
+  hardware_uart: UART0
+
+external_components:
+  - source: github://pr#22197
+    components: [sx126x]
+  - source: github://fortuna/esphome-meshblocks@review/initial-import
+    components: [meshcore, meshcore_core, meshcore_ed25519]
+
+sx126x:
+  - id: !extend lora_radio
+    # MeshCore framing and continuous reception, shared across regions.
+    modulation: LORA
+    crc_enable: true
+    payload_length: 0  # Variable-length packets.
+    # SX126x register representation of MeshCore's private-network sync word.
+    sync_value: [0x14, 0x24]
+    rx_start: true
+    pa_power: ${meshcore_pa_power}
+    frequency: ${meshcore_frequency}
+    bandwidth: ${meshcore_bandwidth}
+    spreading_factor: ${meshcore_sf}
+    # MeshCore convention: 32 symbols for SF <= 8, 16 for higher SF.
+    preamble_size: ${32 if (meshcore_sf | int) <= 8 else 16}
+    coding_rate: ${meshcore_cr}
+
+meshcore:
+  id: mesh_node
+  radio_id: lora_radio
+  time_id: mesh_time
+  path_hash_size: 2
+  clients:
+    - id: alice
+      name: Alice
+      private_key: ${alice_private_key}
+      # A packet carries only a key prefix; full sender keys are explicit receive inputs.
+      peers: ["${bob_public_key}"]
+      on_message:
+        - if:
+            condition:
+              lambda: return message.body() == "pong";
+            then:
+              - logger.log: "Alice received pong: exchange complete"
+    - id: bob
+      name: Bob
+      private_key: ${bob_private_key}
+      peers: ["${alice_public_key}"]
+      on_message:
+        - if:
+            condition:
+              lambda: return message.body() == "ping";
+            then:
+              - logger.log: "Bob received ping; replying to its sender"
+              - meshcore.send_client_message:
+                  sender_private_key: ${bob_private_key}
+                  recipient_public_key: !lambda return message.sender_public_key();
+                  message: pong
+                  timestamp: !lambda return id(mesh_node).next_channel_timestamp();
+
+binary_sensor:
+  - id: !extend boot_button
+    on_press:
+      - logger.log: "PRG pressed: Alice sending ping to Bob"
+      - meshcore.send_client_message:
+          sender_private_key: ${alice_private_key}
+          recipient_public_key: ${bob_public_key}
+          message: ping
+          timestamp: !lambda return id(mesh_node).next_channel_timestamp();
+
+# The public keys are listed above. Nearby CHAT adverts let another device
+# discover the contacts; configure its public key in peers above to receive its DMs.
+interval:
+  - interval: 240min
+    startup_delay: 5s
+    then:
+      - meshcore.advertise_client:
+          client_id: alice
+          timestamp: !lambda return id(mesh_node).next_channel_timestamp();
+      - delay: 2s
+      - meshcore.advertise_client:
+          client_id: bob
+          timestamp: !lambda return id(mesh_node).next_channel_timestamp();

@@ -1,0 +1,121 @@
+# A channel bot: send esphome-ping on #testing or the private channel.
+# Replies stay on the incoming channel. Configure the private shared key in secrets.yaml.
+
+substitutions:
+  # Default MeshCore US/Canada profile with NYC (MeshNY) network conventions.
+  # https://nyme.sh/getting-started/#meshcore
+  # For another network, set these parameters and outbound scopes together.
+  meshcore_frequency: 910.525MHz
+  meshcore_bandwidth: 62_5kHz
+  meshcore_sf: 7
+  meshcore_cr: CR_4_5
+  meshcore_pa_power: 22  # TX power in dBm for this Heltec V3/SX1262.
+
+  region: nyc  # Outbound region for replies on both channels.
+
+esphome:
+  name: meshcore-v3-ping-bot
+  min_version: 2026.11.0-dev
+
+packages:
+  board: github://fortuna/ESPHomeCollection/boards/heltec-wifi-lora-32-v3/board.yaml@71d63352dcb09a396d1cbfe2dc28c3210d8d436e
+
+# Standalone clock input starts unset. MeshCore uses build/restored ordering time.
+# Replace with an independent RTC/SNTP source for accurate UTC; no USB/HA dependency.
+time:
+  - platform: template
+    id: mesh_time
+    timezone: UTC0
+    lambda: return {};
+
+logger:
+  baud_rate: 115200
+  hardware_uart: UART0
+
+external_components:
+  - source: github://pr#22197
+    components: [sx126x]
+  - source: github://fortuna/esphome-meshblocks@review/initial-import
+    components: [meshcore, meshcore_core, meshcore_ed25519]
+
+sx126x:
+  - id: !extend lora_radio
+    # MeshCore framing and continuous reception, shared across regions.
+    modulation: LORA
+    crc_enable: true
+    payload_length: 0  # Variable-length packets.
+    # SX126x register representation of MeshCore's private-network sync word.
+    sync_value: [0x14, 0x24]
+    rx_start: true
+    pa_power: ${meshcore_pa_power}
+    frequency: ${meshcore_frequency}
+    bandwidth: ${meshcore_bandwidth}
+    spreading_factor: ${meshcore_sf}
+    # MeshCore convention: 32 symbols for SF <= 8, 16 for higher SF.
+    preamble_size: ${32 if (meshcore_sf | int) <= 8 else 16}
+    coding_rate: ${meshcore_cr}
+
+meshcore:
+  id: mesh_node
+  radio_id: lora_radio
+  time_id: mesh_time
+  path_hash_size: 2  # MeshNY recommends two-byte path hashes.
+  channels:
+    - id: testing
+      key: "#testing"
+      scope: ${region}
+      on_message:
+        - if:
+            condition:
+              lambda: return message.body() == "esphome-ping";
+            then:
+              - script.execute:
+                  id: testing_pong
+                  peer: !lambda return message.sender();
+    - id: private_chat
+      key: !secret meshcore_private_channel_key
+      scope: ${region}
+      on_message:
+        - if:
+            condition:
+              lambda: return message.body() == "esphome-ping";
+            then:
+              - script.execute:
+                  id: private_chat_pong
+                  peer: !lambda return message.sender();
+
+
+# One pong attempt per ten seconds per channel, no retries or unsolicited channel sends. The owning argument
+# keeps the sender label valid across automation execution. Labels are unverified.
+# meshcore.send_channel_message uses its channel's scope, so both replies are scoped to ${region}.
+script:
+  - id: testing_pong
+    mode: single
+    parameters:
+      peer: meshcore_lib::ChannelText
+    then:
+      - meshcore.send_channel_message:
+          channel_id: testing
+          timestamp: !lambda return id(mesh_node).next_channel_timestamp();
+          sender_name: ESPHome Ping Bot
+          message: !lambda |-
+            if (peer.view().empty()) return "esphome-pong";
+            meshcore_lib::ChannelText reply("@[");
+            reply.append(peer.view()).append("] esphome-pong");
+            return reply;
+      - delay: 10s
+  - id: private_chat_pong
+    mode: single
+    parameters:
+      peer: meshcore_lib::ChannelText
+    then:
+      - meshcore.send_channel_message:
+          channel_id: private_chat
+          timestamp: !lambda return id(mesh_node).next_channel_timestamp();
+          sender_name: ESPHome Ping Bot
+          message: !lambda |-
+            if (peer.view().empty()) return "esphome-pong";
+            meshcore_lib::ChannelText reply("@[");
+            reply.append(peer.view()).append("] esphome-pong");
+            return reply;
+      - delay: 10s

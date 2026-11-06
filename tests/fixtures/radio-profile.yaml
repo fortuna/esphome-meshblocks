@@ -1,0 +1,20 @@
+# User-selected NYC MeshCore profile, checked 2026-10-31.
+# https://nyme.sh/getting-started/#meshcore
+# Internal regression RF/framing settings, not an application package.
+external_components:
+  - source: github://pr#22197
+    components: [sx126x]
+sx126x:
+  - id: !extend lora_radio
+    modulation: LORA
+    crc_enable: true
+    payload_length: 0
+    sync_value: [0x14, 0x24]
+    rx_start: true
+    pa_power: 22
+    frequency: 910.525MHz
+    bandwidth: 62_5kHz
+    spreading_factor: 7
+    # MeshCore v1.18: 32 symbols for SF <= 8, 16 for higher SF.
+    preamble_size: 32
+    coding_rate: CR_4_5

@@ -1,0 +1,6 @@
+# Deterministic test source; production consumers select their own clock.
+time:
+  - platform: template
+    id: mesh_time
+    timezone: UTC0
+    lambda: return 1800000000;

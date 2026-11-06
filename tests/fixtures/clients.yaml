@@ -1,0 +1,52 @@
+# Regression fixture; supply synthetic keys through a private secrets.yaml.
+packages:
+  base: !include channel.yaml
+meshcore:
+  clients:
+    - id: automation_client
+      private_key: !secret personal_room_private_key
+    - id: second_client
+      name: Second
+      private_key: !secret building_room_private_key
+  rooms:
+    - id: public_room
+      storage_id: public
+      name: Public
+      access: public
+      private_key: !secret public_room_private_key
+script:
+  - id: send_client_messages
+    then:
+      - meshcore.send_channel_message:
+          channel_id: testing
+          sender_name: Explicit sender
+          message: Hello channel
+          timestamp: !lambda return id(mesh_node).next_channel_timestamp();
+      - meshcore.send_channel_message:
+          sender_name: ESPHome Ping Bot
+          channel_id: testing
+          message: Hello channel
+          timestamp: !lambda return id(mesh_node).next_channel_timestamp();
+      - meshcore.send_client_message:
+          sender_private_key: !secret building_room_private_key
+          # Public synthetic recipient key; not a deployment destination.
+          recipient_public_key: "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8"
+          message: Hello peer
+          timestamp: !lambda return id(mesh_node).next_channel_timestamp();
+      - meshcore.send_client_message:
+          sender_private_key: !secret personal_room_private_key
+          recipient_public_key: !lambda return "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8";
+          message: !lambda return std::string("Templated message");
+          timestamp: !lambda return id(mesh_node).next_channel_timestamp();
+      - meshcore.advertise_client:
+          client_id: automation_client
+          timestamp: !lambda return id(mesh_node).next_channel_timestamp();
+      - meshcore.advertise_client:
+          client_id: second_client
+          mode: flood
+          scope: nyc
+          timestamp: !lambda return id(mesh_node).next_channel_timestamp();
+      - meshcore.advertise_room:
+          room_id: public_room
+          mode: flood
+          scope: nyc

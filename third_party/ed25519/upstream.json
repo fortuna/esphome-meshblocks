@@ -1,0 +1,66 @@
+{
+  "repository": "meshcore-dev/MeshCore",
+  "revision": "81dbae592ffad40b4212bc0b37e82b38da08f4bc",
+  "files": [
+    {
+      "path": "lib/ed25519/ed_25519.h",
+      "git_blob_sha": "5ac015e33195f3696b7ef16297b7052c52e0b4ab"
+    },
+    {
+      "path": "lib/ed25519/fe.c",
+      "git_blob_sha": "2105eb7b2c57d3819241b93640f6a5afb5358fcc"
+    },
+    {
+      "path": "lib/ed25519/fe.h",
+      "git_blob_sha": "b4b62d28284d4a1e16a325a2fd1eac5c51bd4342"
+    },
+    {
+      "path": "lib/ed25519/fixedint.h",
+      "git_blob_sha": "1a8745b1ea4fe1e9602d0251763965714483bd00"
+    },
+    {
+      "path": "lib/ed25519/ge.c",
+      "git_blob_sha": "87c691bff55d66e591c1fb3c2bdf87a4efee200d"
+    },
+    {
+      "path": "lib/ed25519/ge.h",
+      "git_blob_sha": "17fde2df1ff38a4a8558169163b27f2935474519"
+    },
+    {
+      "path": "lib/ed25519/key_exchange.c",
+      "git_blob_sha": "984c2c8b17539e140710371276ff2b9c49b9fba4"
+    },
+    {
+      "path": "lib/ed25519/keypair.c",
+      "git_blob_sha": "da789f756e1eaa636bf5490afda167ee275e7cb8"
+    },
+    {
+      "path": "lib/ed25519/license.txt",
+      "git_blob_sha": "c1503f912112217bc5a9c727e7e5889bd5aea998"
+    },
+    {
+      "path": "lib/ed25519/precomp_data.h",
+      "git_blob_sha": "ff23986c3980237ddbd2556710a0b7ab7f7ee8ec"
+    },
+    {
+      "path": "lib/ed25519/sc.c",
+      "git_blob_sha": "ca5bad2ca04f39eac3dacb1638b4da3958e4a60e"
+    },
+    {
+      "path": "lib/ed25519/sc.h",
+      "git_blob_sha": "e29e7fa5af2fec309668104c18fe8ab619928580"
+    },
+    {
+      "path": "lib/ed25519/sha512.c",
+      "git_blob_sha": "cb8ae7175392733ff677448b1f1adf729fa5ebd5"
+    },
+    {
+      "path": "lib/ed25519/sha512.h",
+      "git_blob_sha": "a34dd5e429e8210f31f5a05f8ec7baaf46909748"
+    },
+    {
+      "path": "lib/ed25519/sign.c",
+      "git_blob_sha": "463b02bff16acc54d10cbd54dac0a5cc4483d68f"
+    }
+  ]
+}

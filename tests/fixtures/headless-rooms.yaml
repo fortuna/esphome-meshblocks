@@ -1,0 +1,62 @@
+# Schema/provisioning test input; not a public starter configuration.
+# Headless ESP32 DevKit + external SX1262 reference wiring; compile/schema target only.
+# No RF-tested board claim. Credentials are synthetic test inputs.
+esphome:
+  name: meshcore-esp32-rooms
+  min_version: 2026.11.0-dev
+
+packages:
+  clock: !include time.yaml
+  radio_profile: !include radio-profile.yaml
+
+esp32:
+  board: esp32dev
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+    advanced:
+      loop_task_stack_size: 16384
+
+spi:
+  - id: lora_spi
+    clk_pin: GPIO18
+    mosi_pin: GPIO23
+    miso_pin: GPIO19
+
+sx126x:
+  - id: lora_radio
+    spi_id: lora_spi
+    hw_version: sx1262
+    cs_pin: GPIO27
+    rst_pin: GPIO14
+    busy_pin: GPIO25
+    dio1_pin: GPIO26
+    # Assumes a crystal module with its RF switch controlled by DIO2.
+    rf_switch: true
+    tcxo_voltage: NONE
+
+logger:
+  baud_rate: 115200
+  hardware_uart: UART0
+
+external_components:
+  - source:
+      type: local
+      path: ../../components
+    components: [meshcore, meshcore_core, meshcore_ed25519]
+
+meshcore:
+  id: mesh_node
+  radio_id: lora_radio
+  time_id: mesh_time
+  path_hash_size: 2
+  rooms:
+    - id: personal
+      name: personal
+      password: !secret personal_room_password
+    - id: building
+      name: building
+      password: !secret building_room_password
+    - id: workshop
+      name: workshop
+      password: !secret workshop_room_password
