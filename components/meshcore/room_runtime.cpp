@@ -146,6 +146,7 @@ void RoomRuntime::dispatch_posts(float rssi, float snr) {
   const std::string_view text(this->service_.last_text());
   message.text_size = std::min(text.size(), ::meshcore_lib::ROOM_TEXT_CAPACITY);
   std::copy_n(text.begin(), message.text_size, message.text.begin());
+  message.author = this->service_.last_author();
   message.rssi = rssi;
   message.snr = snr;
   for (auto &callback : this->post_callbacks_)

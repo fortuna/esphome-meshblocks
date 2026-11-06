@@ -6,6 +6,12 @@ history was preserved in the workspace's external prototype under
 tracks the self-contained reusable project. No historical device observation is
 being claimed for a new build.
 
+## 2026-11-06 — Room post author key
+
+`on_post` messages now include `author`, the member's full public key from its
+login; `RoomService::last_author()` exposes the latest post's author. Room posts
+carry no author name. Host (author assertion), config and style checks pass.
+
 ## 2026-11-06 — Room post automations and signal metadata
 
 Rooms gain `on_post`, fired after a member post is stored (after the packet's

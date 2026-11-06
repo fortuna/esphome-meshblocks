@@ -8,8 +8,9 @@
 #include <vector>
 namespace esphome::meshcore {
 // A member post the room has already stored, copied for automations (safe across delays).
-// The author is not included; rssi/snr belong to the packet that carried it (its last hop).
+// MeshCore posts carry no author name; rssi/snr belong to the packet that carried it (its last hop).
 struct RoomMessage {
+  ::meshcore_lib::PublicKey author{};  // The member's full public key, from its login.
   std::array<char, ::meshcore_lib::ROOM_TEXT_CAPACITY + 1> text{};
   size_t text_size{};
   float rssi{};

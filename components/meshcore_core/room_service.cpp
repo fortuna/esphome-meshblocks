@@ -24,8 +24,10 @@ bool RoomService::configure(const LocalIdentity &identity, std::string_view name
   std::copy(name.begin(), name.end(), this->name_.begin());
   std::copy(password.begin(), password.end(), this->password_.begin());
   RoomPost latest;
-  if (this->posts_.count() && this->posts_.get(this->posts_.count() - 1, latest))
+  if (this->posts_.count() && this->posts_.get(this->posts_.count() - 1, latest)) {
     this->last_text_ = latest.text;
+    this->last_author_ = latest.author;
+  }
   this->configured_ = true;
   return true;
 }
@@ -61,6 +63,7 @@ bool RoomService::post_(const PublicKey &author, std::string_view text, uint32_t
     return false;
   ++this->posts_since_boot_;
   this->last_text_ = post.text;
+  this->last_author_ = post.author;
   return true;
 }
 bool RoomService::add_system_post(std::string_view text, uint32_t epoch) {

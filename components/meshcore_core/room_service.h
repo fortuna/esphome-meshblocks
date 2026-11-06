@@ -94,6 +94,8 @@ class RoomService {
   const RoomLoginDiagnostics &login_diagnostics() const { return this->login_diagnostics_; }
   /// Borrow a NUL-terminated latest-post preview; storage belongs to this service and contents can change.
   const char *last_text() const { return this->last_text_.data(); }
+  /// Borrow the full public key of the latest post's author (the room's own key for system posts).
+  const PublicKey &last_author() const { return this->last_author_; }
   /// Borrow the room's full public identity, meaningful after configure succeeds.
   const PublicKey &public_key() const { return this->identity_.public_key; }
   /// Borrow the copied NUL-terminated advertised name, empty before configuration.
@@ -144,6 +146,7 @@ class RoomService {
   std::array<char, 33> password_{};
   std::array<Client, ROOM_CLIENT_CAPACITY> clients_{};
   std::array<char, ROOM_TEXT_CAPACITY + 1> last_text_{};
+  PublicKey last_author_{};
   bool configured_{};
   size_t next_client_{};
   uint64_t next_push_{}, next_login_{};

@@ -291,8 +291,9 @@ Messages also carry `rssi` and `snr`: the signal of the received packet's last h
 ## Room posts
 
 Each room may declare `on_post`. It runs after the room has stored a member's post,
-and receives an owning `post` with `body()`, `rssi` and `snr` (of the packet's last
-hop). The author is not included. `meshcore.add_room_post` (`room_id`, templatable
+and receives an owning `post` with `body()`, `author` (the member's full public
+key), `rssi` and `snr` (of the packet's last hop). MeshCore room posts carry no
+author name. `meshcore.add_room_post` (`room_id`, templatable
 `text` of 1-150 UTF-8 bytes) stores a post under the room's own identity and
 delivers it to members; a rejection is logged, not retried.
 

@@ -230,6 +230,7 @@ int main() {
   receive(a, valid_post, 4200, EPOCH + 3);
   assert(a.posts() == 1 && a.received_posts() == 1 && b.posts() == 0);
   assert(std::string(posts_a.posts[0].text.data()) == "hello personal");
+  assert(a.last_author() == client.public_key && std::string(a.last_text()) == "hello personal");
   receive(a, valid_post, 4300, EPOCH + 3);
   assert(a.posts() == 1 && a.received_posts() == 1);  // Retries ACK but do not store twice.
   auto post_ack = transport_a.sent.back().frame;
