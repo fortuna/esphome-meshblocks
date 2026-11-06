@@ -3,7 +3,9 @@
 #include <array>
 #include <string>
 #include <vector>
+#include <functional>
 #include <memory>
+#include <string_view>
 #include "esphome/components/meshcore_core/channel_codec.h"
 #include "esphome/components/meshcore_core/epoch_clock.h"
 #include "esphome/components/meshcore_core/channel_timestamp.h"
@@ -129,7 +131,9 @@ class MeshCoreComponent final : public Component,
   /// Change a legacy room password only while TX is drained; static/public rooms reject changes.
   bool change_room_password(size_t index, const char *password);
   /// Add a local post through the existing room service using protocol time.
-  bool add_room_post(size_t index, const char *text);
+  bool add_room_post(size_t index, std::string_view text);
+  /// Register a member-post callback on the room with this stable ID; an unknown ID fails configuration.
+  void add_room_post_callback(const std::string &id, std::function<void(const RoomMessage &)> callback);
   /// Export a signed room advertisement without transmitting; consumes a durable advert timestamp.
   bool export_room_advertisement(size_t index, ::meshcore_lib::Frame &out);
   /// Require successful component setup and a present, nonfailed radio; does not prove RF reception by a peer.

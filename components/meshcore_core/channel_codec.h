@@ -68,6 +68,9 @@ struct ChannelMessage {
   std::array<char, MAX_RECEIVED_TEXT + 1> text{};
   size_t text_size{};
   std::array<uint8_t, 8> fingerprint{};
+  // Signal of the received packet (its last hop), set by the radio owner; zero when not received.
+  float rssi{};
+  float snr{};
 
   // Views belong to this value. The conventional sender prefix is unverified.
   /// Borrow the text before the first ": ", or an empty view when no prefix exists. The label is unverified.

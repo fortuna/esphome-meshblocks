@@ -6,6 +6,18 @@ history was preserved in the workspace's external prototype under
 tracks the self-contained reusable project. No historical device observation is
 being claimed for a new build.
 
+## 2026-11-06 — Room post automations and signal metadata
+
+Rooms gain `on_post`, fired after a member post is stored (after the packet's
+receive returns, so automations may post or send), with an owning `post` holding
+the text and the carrying packet's RSSI/SNR; the author is not exposed.
+`meshcore.add_room_post` stores a post under the room's identity. Channel
+messages now carry `rssi`/`snr`. Callbacks are registered at composition time only.
+
+Validation: host tests, config tests (on_post reply, 151-byte text and unknown
+room rejected), C++ style and the external consumer compile pass. Not flashed by
+the library.
+
 ## 2026-11-06 — Names use MeshCore's 31-byte limit
 
 Room, client and channel sender names now accept up to 31 printable ASCII

@@ -2,8 +2,21 @@
 #include "ed25519_identity.h"
 #include "nvs_room_store.h"
 #include "../meshcore_core/node_runtime.h"
+#include "../meshcore_core/room_service.h"
+#include <functional>
+#include <string_view>
 #include <vector>
 namespace esphome::meshcore {
+// A member post the room has already stored, copied for automations (safe across delays).
+// The author is not included; rssi/snr belong to the packet that carried it (its last hop).
+struct RoomMessage {
+  std::array<char, ::meshcore_lib::ROOM_TEXT_CAPACITY + 1> text{};
+  size_t text_size{};
+  float rssi{};
+  float snr{};
+  /// Borrow the post text; valid while this value lives.
+  std::string_view body() const { return {this->text.data(), this->text_size}; }
+};
 class EspRandom final : public ::meshcore_lib::RandomSource {
  public:
   /// Fill size bytes through ESP-IDF's random source; this adapter currently always reports success.
@@ -65,6 +78,12 @@ class RoomRuntime {
   ::meshcore_lib::RoomService &service() { return this->service_; }
   /// Borrow the owned service for read-only inspection; this reference does not transfer ownership.
   const ::meshcore_lib::RoomService &service() const { return this->service_; }
+  /// Store a callback for member posts; it runs only after the room has stored the post.
+  void add_on_post_callback(std::function<void(const RoomMessage &)> callback) {
+    this->post_callbacks_.push_back(std::move(callback));  // Composition time only.
+  }
+  /// Report a member post accepted since the previous call, with its packet's signal; call after receive returns.
+  void dispatch_posts(float rssi, float snr);
 
  private:
   bool activate_(const RoomCredentials &credentials);
@@ -83,5 +102,7 @@ class RoomRuntime {
   RoomCredentials initial_credentials_{};
   uint32_t restored_epoch_{};
   uint32_t last_advert_epoch_{};
+  uint32_t dispatched_posts_{};
+  std::vector<std::function<void(const RoomMessage &)>> post_callbacks_;
 };
 }  // namespace esphome::meshcore

@@ -32,6 +32,9 @@ ChannelText = cg.global_ns.namespace("meshcore_lib").class_("ChannelText")
 ChannelMessageTrigger = meshcore_ns.class_("ChannelMessageTrigger", automation.Trigger.template(ChannelMessage))
 SendChannelMessageAction = meshcore_ns.class_("SendChannelMessageAction", automation.Action)
 AdvertiseRoomAction = meshcore_ns.class_("AdvertiseRoomAction", automation.Action)
+AddRoomPostAction = meshcore_ns.class_("AddRoomPostAction", automation.Action)
+RoomMessage = meshcore_ns.struct("RoomMessage")
+RoomPostTrigger = meshcore_ns.class_("RoomPostTrigger", automation.Trigger.template(RoomMessage))
 RoomAccess = cg.global_ns.namespace("meshcore_lib").enum("RoomAccess", is_class=True)
 ROOM_ACCESS = {"private": RoomAccess.PRIVATE, "public": RoomAccess.PUBLIC}
 
@@ -234,6 +237,9 @@ ROOM_SCHEMA = cv.All(cv.Schema({
     cv.Optional("access", default="private"): cv.enum(ROOM_ACCESS, lower=True),
     cv.Optional("password"): room_password,
     cv.Optional("private_key"): room_private_key,
+    cv.Optional("on_post"): automation.validate_automation({
+        cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(RoomPostTrigger),
+    }),
 }), room_access, room_storage)
 
 
@@ -367,6 +373,11 @@ async def to_code(config):
         else:
             # Retain the separately provisioned path for existing deployments.
             cg.add(var.add_room(room["storage_id"], room["name"], room["access"]))
+    for room in config["rooms"]:
+        handle = await cg.get_variable(room[CONF_ID])
+        for conf in room.get("on_post", []):
+            trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], handle)
+            await automation.build_automation(trigger, [(RoomMessage, "post")], conf)
     for channel in config["channels"]:
         key = resolve_channel_key(channel)
         scope = channel.get("scope")
@@ -428,6 +439,24 @@ async def advertise_room_to_code(config, action_id, template_arg, args):
     room = await cg.get_variable(config["room_id"])
     return cg.new_Pvariable(action_id, template_arg, room, config["mode"] == "flood",
                             list(resolve_scope_key(config.get("scope"))))
+
+
+def room_post_text(value):
+    value = cv.string_strict(value)
+    if not 1 <= len(value.encode()) <= 150 or "\0" in value:
+        raise cv.Invalid("Room post must be 1-150 UTF-8 bytes without NUL")
+    return value
+
+
+@automation.register_action("meshcore.add_room_post", AddRoomPostAction, cv.Schema({
+    cv.Required("room_id"): cv.use_id(Room),
+    cv.Required("text"): cv.templatable(room_post_text),
+}), synchronous=True)
+async def add_room_post_to_code(config, action_id, template_arg, args):
+    room = await cg.get_variable(config["room_id"])
+    var = cg.new_Pvariable(action_id, template_arg, room)
+    cg.add(var.set_text(await cg.templatable(config["text"], args, ChannelText)))
+    return var
 
 
 @automation.register_action("meshcore.send_client_message", SendClientMessageAction, cv.Schema({

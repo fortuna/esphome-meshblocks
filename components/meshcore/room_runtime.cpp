@@ -136,4 +136,19 @@ bool RoomRuntime::create_advertisement(uint32_t epoch, bool flood, ::meshcore_li
   this->last_advert_epoch_ = epoch;
   return true;
 }
+void RoomRuntime::dispatch_posts(float rssi, float snr) {
+  const uint32_t received = this->service_.received_posts();
+  if (received == this->dispatched_posts_)
+    return;
+  // One packet carries at most one post, and last_text() is the post just stored.
+  this->dispatched_posts_ = received;
+  RoomMessage message;
+  const std::string_view text(this->service_.last_text());
+  message.text_size = std::min(text.size(), ::meshcore_lib::ROOM_TEXT_CAPACITY);
+  std::copy_n(text.begin(), message.text_size, message.text.begin());
+  message.rssi = rssi;
+  message.snr = snr;
+  for (auto &callback : this->post_callbacks_)
+    callback(message);
+}
 }  // namespace esphome::meshcore

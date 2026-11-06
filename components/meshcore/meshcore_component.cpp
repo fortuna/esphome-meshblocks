@@ -167,6 +167,9 @@ void MeshCoreComponent::on_packet(const std::vector<uint8_t> &packet, float rssi
       ESP_LOGD(TAG, "MESH RX type=%u route=%s hops=%u", view.type, view.flood() ? "flood" : "direct",
                view.path.descriptor & 63);
       this->node_.receive(view, millis_64(), this->current_epoch_());
+      // Post automations run after the room has finished with the packet, so they may post or send.
+      for (size_t i = 0; i < this->room_count_; ++i)
+        this->rooms_[i]->dispatch_posts(rssi, snr);
       return;
     }
   }
@@ -185,6 +188,8 @@ void MeshCoreComponent::on_packet(const std::vector<uint8_t> &packet, float rssi
     ++this->received_messages_;
     this->last_rssi_ = rssi;
     this->last_snr_ = snr;
+    message.rssi = rssi;
+    message.snr = snr;
     this->last_channel_ = this->channels_[i]->id();
     this->last_message_timestamp_ = message.timestamp;
     this->last_hops_ = message.hops;
@@ -499,6 +504,25 @@ bool MeshCoreComponent::send(const ::meshcore_lib::Frame &frame, uint64_t not_be
 bool Room::advertise(bool flood, const ::meshcore_lib::FloodScope *scope) {
   return this->parent_->advertise_room(this->storage_id_, flood, scope);
 }
+void Room::add_on_post_callback(std::function<void(const RoomMessage &)> callback) {
+  this->parent_->add_room_post_callback(this->storage_id_, std::move(callback));
+}
+bool Room::post(std::string_view text) {
+  for (size_t index = 0; index < this->parent_->room_count(); ++index)
+    if (this->parent_->room_at(index)->id() == this->storage_id_ && this->parent_->add_room_post(index, text))
+      return true;
+  ESP_LOGW(TAG, "ROOM post rejected room=%s", this->storage_id_.c_str());
+  return false;
+}
+void MeshCoreComponent::add_room_post_callback(const std::string &id,
+                                               std::function<void(const RoomMessage &)> callback) {
+  for (size_t index = 0; index < this->room_count_; ++index)
+    if (this->rooms_[index]->id() == id) {
+      this->rooms_[index]->add_on_post_callback(std::move(callback));
+      return;
+    }
+  this->configuration_failed_ = true;
+}
 bool MeshCoreComponent::advertise_room(const std::string &id, bool flood, const ::meshcore_lib::FloodScope *scope) {
   if (scope == nullptr || (flood && scope->valid))
     for (size_t index = 0; index < this->room_count_; ++index)
@@ -536,7 +560,7 @@ bool MeshCoreComponent::change_room_password(size_t index, const char *password)
   return index < this->room_count_ && this->scheduler_.outstanding() == 0 &&
          this->rooms_[index]->change_password(password);
 }
-bool MeshCoreComponent::add_room_post(size_t index, const char *text) {
+bool MeshCoreComponent::add_room_post(size_t index, std::string_view text) {
   if (index >= this->room_count_ || !this->rooms_[index]->ready())
     return false;
   const bool accepted = this->rooms_[index]->service().add_system_post(text, this->current_epoch_());

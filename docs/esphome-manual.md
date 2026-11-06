@@ -286,6 +286,34 @@ retaining them beyond their owner. Duplicate/self-echo filtering occurs first.
 The library supplies events and send operations; ping responses, cooldowns and
 application message rules belong in your YAML.
 
+Messages also carry `rssi` and `snr`: the signal of the received packet's last hop.
+
+## Room posts
+
+Each room may declare `on_post`. It runs after the room has stored a member's post,
+and receives an owning `post` with `body()`, `rssi` and `snr` (of the packet's last
+hop). The author is not included. `meshcore.add_room_post` (`room_id`, templatable
+`text` of 1-150 UTF-8 bytes) stores a post under the room's own identity and
+delivers it to members; a rejection is logged, not retried.
+
+```yaml
+rooms:
+  - id: bot
+    name: Ping Bot
+    access: public
+    on_post:
+      - if:
+          condition:
+            lambda: return post.body() == "ping";
+          then:
+            - meshcore.add_room_post:
+                room_id: bot
+                text: !lambda |-
+                  char text[48];
+                  snprintf(text, sizeof(text), "pong (RSSI %.1f, SNR %.1f)", post.rssi, post.snr);
+                  return meshcore_lib::ChannelText(text);
+```
+
 ## Advertisements and time
 
 | Action | Reference fields |
