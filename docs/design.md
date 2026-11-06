@@ -176,7 +176,7 @@ automations. Its sender prefix is unverified. Channel messages use only the shar
 key; choosing a client name does not sign or authenticate authorship.
 
 `send_channel_message` selects a subscribed `channel_id` or a send-only `channel_key` (hashtag, base64 binary key or byte list), and a templatable `sender_name`; no client identity is required. Send-only messages use unscoped flooding and do not create a receive subscription or observable channel preview.
-Formatted `name: message` must fit 160 UTF-8 bytes; names have 1–24 printable ASCII
+Formatted `name: message` must fit 160 UTF-8 bytes; names have 1–31 printable ASCII
 bytes without colon. Caller timestamps are used exactly, never silently clamped.
 Templated values own bounded storage; overlength values are rejected, not truncated.
 

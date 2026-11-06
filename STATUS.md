@@ -1,8 +1,13 @@
 # Library status
 
-Updated **2026-11-05**. ESPHome is the selected implementation approach.
+Updated **2026-11-06**. ESPHome is the selected implementation approach.
 [Design](docs/design.md) defines supported boundaries;
 [manual](docs/esphome-manual.md) defines consumer configuration/actions.
+
+## Name limit — 2026-11-06
+
+Room, client and sender names accept up to MeshCore's 31 bytes (printable ASCII,
+no colon). UTF-8 names, which MeshCore also accepts, remain unsupported.
 
 ## Hosted review branch and clone-free setup — 2026-11-05
 

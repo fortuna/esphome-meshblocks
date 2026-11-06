@@ -11,7 +11,7 @@ Client::Client(MeshCoreComponent *parent) : parent_(parent), service_(this->prot
 }
 bool Client::configure(const std::string &id, const std::string &name, const std::vector<uint8_t> &key) {
   ::meshcore_lib::LocalIdentity identity;
-  if (id.empty() || name.empty() || name.size() > 24 || key.size() != 64 ||
+  if (id.empty() || name.empty() || name.size() > ::meshcore_lib::MAX_NAME_SIZE || key.size() != 64 ||
       !this->identities_.import_private_key(key.data(), identity) || !this->service_.configure(identity))
     return false;
   this->id_ = id;

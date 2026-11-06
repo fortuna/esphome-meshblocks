@@ -135,7 +135,7 @@ bool ChannelTextCodec::encode(const ChannelKey &key, uint8_t path_hash_size, uin
   out = {};
   const size_t text_size = sender.size() + 2 + text.size();
   if (!key.valid || (scope != nullptr && !scope->valid) || path_hash_size < 1 || path_hash_size > 3 || timestamp == 0 ||
-      sender.empty() || text.empty() || sender.size() > 24 || text.size() > MAX_SENT_TEXT ||
+      sender.empty() || text.empty() || sender.size() > MAX_NAME_SIZE || text.size() > MAX_SENT_TEXT ||
       std::any_of(sender.begin(), sender.end(), [](unsigned char ch) { return ch < 32 || ch > 126 || ch == ':'; }) ||
       text_size > MAX_SENT_TEXT || sender.find('\0') != std::string_view::npos ||
       text.find('\0') != std::string_view::npos)

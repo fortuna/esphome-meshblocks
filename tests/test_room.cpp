@@ -132,6 +132,22 @@ int main() {
   const auto expected_advert = hex(ROOM_ADVERT);
   assert(advert.size == expected_advert.size() &&
          std::equal(expected_advert.begin(), expected_advert.end(), advert.bytes.begin()));
+  {
+    // MeshCore's 31-byte advert name limit: 32 bytes of app data minus the flags byte.
+    MemoryPosts posts;
+    FakeTransport transport;
+    FakeRandom random;
+    FakeStatus status;
+    RoomService longest(protocol_a, transport, posts, random, status),
+        too_long(protocol_a, transport, posts, random, status);
+    const std::string name(MAX_NAME_SIZE, 'n');
+    assert(!too_long.configure(personal, name + "n", "test-pass-1234"));
+    assert(longest.configure(personal, name, "test-pass-1234"));
+    Frame long_advert;
+    assert(longest.advert(EPOCH, long_advert));
+    assert(long_advert.size == advert.size - std::strlen("personal") + MAX_NAME_SIZE);
+    assert(std::equal(name.begin(), name.end(), long_advert.bytes.begin() + long_advert.size - MAX_NAME_SIZE));
+  }
   Frame flood_advert;
   assert(a.advert(EPOCH, flood_advert, true));
   PacketView direct_view, flood_view;

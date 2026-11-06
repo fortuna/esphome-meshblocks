@@ -6,6 +6,20 @@ history was preserved in the workspace's external prototype under
 tracks the self-contained reusable project. No historical device observation is
 being claimed for a new build.
 
+## 2026-11-06 — Names use MeshCore's 31-byte limit
+
+Room, client and channel sender names now accept up to 31 printable ASCII
+characters, MeshCore v1.18's limit: advert app data is 32 bytes (one flags byte,
+then the name when no location is sent), and stock firmware stores names in
+`char[32]`. The former 24-character cap had no protocol basis. One
+`MAX_NAME_SIZE` constant bounds validation, advert buffers and room names. Names
+are not persisted, so stored room formats are unchanged.
+
+Validation: host tests (including a 31-byte room advert and 32-byte rejection,
+and 31/32-byte channel senders), config tests with 31/32-byte room and sender
+names, C++ style checks and the external consumer compile pass. Not flashed by
+the library; consumers observe it on their own devices.
+
 ## 2026-11-05 — Hosted review branch and clone-free consumers
 
 Created `fortuna/esphome-meshblocks` privately with an empty `main` baseline and

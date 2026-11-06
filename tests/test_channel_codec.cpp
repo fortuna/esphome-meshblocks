@@ -256,8 +256,9 @@ int main() {
   assert(!codec_a.encode(key_a, 4, 1793491204, "P", "text", encoded));
   assert(!codec_a.encode(key_a, 2, 0, "P", "text", encoded));
   assert(!codec_a.encode(key_a, 2, 1, "P", std::string("a\0b", 3), encoded));
-  for (const auto &name :
-       {std::string(25, 'x'), std::string("bad:name"), std::string("bad\nname"), std::string("caf\xc3\xa9")})
+  assert(codec_a.encode(key_a, 2, 1, std::string(MAX_NAME_SIZE, 'x'), "text", encoded));
+  for (const auto &name : {std::string(MAX_NAME_SIZE + 1, 'x'), std::string("bad:name"), std::string("bad\nname"),
+                           std::string("caf\xc3\xa9")})
     assert(!codec_a.encode(key_a, 2, 1, name, "text", encoded));
   // Per-send sender selection does not mutate a previous message or identity.
   assert(codec_a.encode(key_a, 2, 1, "Automation", "meshcore-pong-v1", encoded, &nyc));

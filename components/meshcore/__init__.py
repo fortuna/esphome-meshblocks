@@ -72,10 +72,14 @@ def channel_key(value):
     return value
 
 
+# MeshCore advert app data is 32 bytes: a flags byte, then the name (no location is sent).
+MAX_NAME_SIZE = 31
+
+
 def sender_name(value):
     value = cv.string_strict(value)
-    if not 1 <= len(value) <= 24 or any(not 32 <= ord(c) <= 126 or c == ':' for c in value):
-        raise cv.Invalid("Sender name must be 1-24 printable ASCII characters without colon")
+    if not 1 <= len(value) <= MAX_NAME_SIZE or any(not 32 <= ord(c) <= 126 or c == ':' for c in value):
+        raise cv.Invalid(f"Sender name must be 1-{MAX_NAME_SIZE} printable ASCII characters without colon")
     return value
 
 

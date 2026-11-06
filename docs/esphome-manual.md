@@ -266,7 +266,7 @@ outbound routing, not membership or inbound authorization.
 `meshcore.send_channel_message` requires exactly one of `channel_id` or `channel_key`, plus templatable `sender_name`,
 `message` and nonzero uint32 `timestamp`. It requires no configured client.
 A `channel_key` accepts the same hashtag, base64 key or byte list as `channels.key` and sends unscoped without subscribing or retaining a channel preview. Use `channel_id` for a configured channel's scope and preview. The former `hashtag`, `name` and `sender_id` fields are rejected; migrate either to
-`sender_name`. Formatted `name: message` must fit 160 UTF-8 bytes; names are 1–24
+`sender_name`. Formatted `name: message` must fit 160 UTF-8 bytes; names are 1–31
 printable ASCII characters without colon. The label is unverified channel text. Timestamp values are
 used exactly; the helper supplies within-boot estimates when source UTC is unset.
 

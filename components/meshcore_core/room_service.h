@@ -140,7 +140,7 @@ class RoomService {
   NodeStatusSource &status_;
   LocalIdentity identity_{};
   RoomAccess access_{RoomAccess::PRIVATE};
-  std::array<char, 25> name_{};
+  std::array<char, MAX_NAME_SIZE + 1> name_{};
   std::array<char, 33> password_{};
   std::array<Client, ROOM_CLIENT_CAPACITY> clients_{};
   std::array<char, ROOM_TEXT_CAPACITY + 1> last_text_{};

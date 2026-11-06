@@ -44,15 +44,15 @@ bool RoomProtocol::envelope_(uint8_t type, bool flood, const PacketPath &path, c
 bool RoomProtocol::advert(const LocalIdentity &id, std::string_view name, uint32_t epoch, Frame &out, bool flood,
                           const FloodScope *scope, AdvertRole role) {
   out = {};
-  if ((role != AdvertRole::CHAT && role != AdvertRole::ROOM) || name.empty() || name.size() > 24 || epoch == 0 ||
-      name.find('\0') != std::string_view::npos || (scope != nullptr && (!flood || !scope->valid)))
+  if ((role != AdvertRole::CHAT && role != AdvertRole::ROOM) || name.empty() || name.size() > MAX_NAME_SIZE ||
+      epoch == 0 || name.find('\0') != std::string_view::npos || (scope != nullptr && (!flood || !scope->valid)))
     return false;
-  std::array<uint8_t, 125> payload{};
+  std::array<uint8_t, 101 + MAX_NAME_SIZE> payload{};
   std::copy(id.public_key.begin(), id.public_key.end(), payload.begin());
   write_u32(payload.data() + 32, epoch);
   payload[100] = 0x80 | static_cast<uint8_t>(role);  // Role | ADV_NAME_MASK; no location.
   std::copy(name.begin(), name.end(), payload.begin() + 101);
-  std::array<uint8_t, 61> message{};
+  std::array<uint8_t, 37 + MAX_NAME_SIZE> message{};
   std::copy_n(payload.begin(), 36, message.begin());
   std::copy_n(payload.begin() + 100, name.size() + 1, message.begin() + 36);
   if (!this->identities_.sign(id, message.data(), 37 + name.size(), payload.data() + 36))

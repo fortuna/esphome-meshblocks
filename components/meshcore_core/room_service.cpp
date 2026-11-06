@@ -15,9 +15,9 @@ bool RoomService::configure(const LocalIdentity &identity, std::string_view name
                             RoomAccess access) {
   // Load old records up to 32 bytes for explicit USB repair. New provisioning and
   // policy updates cap passwords at the stock companion's 15-character limit.
-  if (this->configured_ || name.empty() || name.size() > 24 || password.size() < 12 || password.size() > 32 ||
-      name.find('\0') != std::string_view::npos || password.find('\0') != std::string_view::npos ||
-      (access != RoomAccess::PRIVATE && access != RoomAccess::PUBLIC))
+  if (this->configured_ || name.empty() || name.size() > MAX_NAME_SIZE || password.size() < 12 ||
+      password.size() > 32 || name.find('\0') != std::string_view::npos ||
+      password.find('\0') != std::string_view::npos || (access != RoomAccess::PRIVATE && access != RoomAccess::PUBLIC))
     return false;
   this->identity_ = identity;
   this->access_ = access;

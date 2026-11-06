@@ -17,6 +17,9 @@ constexpr size_t MAX_PAYLOAD_SIZE = 184;
 constexpr size_t MAX_CIPHERTEXT_SIZE = 176;
 constexpr size_t MAX_RECEIVED_TEXT = MAX_CIPHERTEXT_SIZE - 5;
 constexpr size_t MAX_SENT_TEXT = 160;  // Includes the "sender: " prefix.
+// Advert app data holds 32 bytes: a flags byte, then the name when no location is sent.
+// Stock firmware stores names in char[32], so this also bounds sender and client names.
+constexpr size_t MAX_NAME_SIZE = 31;
 
 class CryptoProvider {
  public:
